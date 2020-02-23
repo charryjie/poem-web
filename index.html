@@ -1,0 +1,108 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+
+  <title>The HTML5 Herald</title>
+  
+  <meta name="description" content="The HTML5 Herald">
+  <meta name="author" content="SitePoint">
+  <style>
+
+    #content{
+      text-align: center;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="content">
+    <div>
+      <p id="shi"></p>
+      <button id="huanshi">换诗</button>
+    </div>
+    <div>
+      <input type="text" id="comInput">
+      
+    </div>
+    <button id="submit">确认</button>
+    <ul id="comment"></ul>
+  </div>
+  <script>
+    var index;
+    function getComment() {
+      const Http = new XMLHttpRequest();
+      const url='http://localhost:1234/comment/' + index;
+      Http.open("GET", url); 
+
+      Http.onreadystatechange = (e) => {
+        if (Http.readyState == 4) {
+          var cmt = JSON.parse(Http.responseText);
+          
+          var comment = document.getElementById("comment")
+          comment.textContent = "";
+          for(var i = 0; i < cmt.length; i++) {
+            var oneComment = document.createElement("p");
+            oneComment.textContent = cmt[i];
+            comment.appendChild(oneComment);
+          }
+        }
+      }
+
+      Http.send();
+    }
+
+    function getPoem() {
+      const Http = new XMLHttpRequest();
+      const url='http://localhost:1234/poem';
+      Http.open("GET", url); 
+
+      Http.onreadystatechange = (e) => {
+        if (Http.readyState == 4) {
+          var item = JSON.parse(Http.responseText);
+          index = item.idx;
+          document.getElementById("shi").textContent = item.poem;
+          getComment();
+        }
+      }
+
+      Http.send();
+    }
+
+    function addComment() {
+      const Http = new XMLHttpRequest();
+      const url='http://localhost:1234/comment/' + index;
+      Http.open("POST", url);
+
+      Http.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
+      var content = document.getElementById("comInput").value;
+      document.getElementById("comInput").value = null;
+      // var oneComment = document.createElement("p");
+      // oneComment.textContent = content;
+      // document.getElementById("comment").appendChild(oneComment);
+
+      Http.onreadystatechange = (e) => {
+        if (Http.readyState == 4) {
+          getComment();
+        }
+      }
+      
+      Http.send(JSON.stringify({
+        comment: content
+      }));
+    }
+
+    getPoem();
+    document.getElementById("huanshi").onclick = getPoem
+    document.getElementById("submit").onclick = addComment
+
+    function refresh() {
+      getComment()
+      setTimeout(refresh, 2000);
+    }
+    
+    setTimeout(refresh, 2000);
+  </script>
+</body>
+</html>
